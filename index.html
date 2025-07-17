@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Filialbesuch Feedback</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #00bcd4 0%, #3f51b5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3f51b5 0%, #00bcd4 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .budni-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px auto;
+            position: relative;
+        }
+
+        .budni-logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        select, input[type="text"], input[type="date"], input[type="time"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        select:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, textarea:focus {
+            outline: none;
+            border-color: #3f51b5;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.15);
+        }
+
+        .location-section {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .question-item {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .question-item:hover {
+            border-color: #3f51b5;
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.1);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .question-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, #3f51b5 0%, #00bcd4 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .question-number:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+        }
+
+        .question-number:active {
+            transform: translateY(0);
+        }
+
+        .question-number::after {
+            content: "✏️";
+            font-size: 10px;
+            opacity: 0;
+            margin-left: 4px;
+            transition: opacity 0.3s ease;
+        }
+
+        .question-number:hover::after {
+            opacity: 0.7;
+        }
+
+        .camera-icon {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .camera-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .delete-question {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-question:hover {
+            background: #ff3742;
+            transform: scale(1.05);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .thumbnails {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 6px;
+            margin-top: 15px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 5px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .thumbnail {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            background: white;
+            cursor: pointer;
+            aspect-ratio: 1;
+        }
+
+        .thumbnail:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnails[data-count="1"] {
+            grid-template-columns: 1fr;
+            max-width: 200px;
+        }
+
+        .thumbnails[data-count="2"] {
+            grid-template-columns: 1fr 1fr;
+            max-width: 200px;
+        }
+
+        .thumbnails[data-count="3"] {
+            grid-template-columns: 2fr 1fr 1fr;
+            max-width: 240px;
+        }
+
+        .thumbnails[data-count="4"] {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 200px;
+        }
+
+        .thumbnails[data-count="5"], 
+        .thumbnails[data-count="6"],
+        .thumbnails[data-count="7"],
+        .thumbnails[data-count="8"] {
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 320px;
+        }
+
+        .thumbnails[data-count^="9"],
+        .thumbnails[data-count^="1"] {
+            grid-template-columns: repeat(5, 1fr);
+            max-width: 400px;
+        }
+
+        .thumbnail-delete {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(255, 71, 87, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .thumbnail:hover .thumbnail-delete {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .thumbnail-delete:hover {
+            background: #ff3742;
+            transform: scale(1.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3f51b5 0%, #00bcd4 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #00bcd4 0%, #80deea 100%);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        /* Star Rating System */
+        .rating-section {
+            background: linear-gradient(135deg, #f1f8ff 0%, #e8f4f8 100%);
+            border: 3px solid #3f51b5;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 80px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(63, 81, 181, 0.15);
+        }
+
+        .rating-section::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 6px;
+            background: linear-gradient(90deg, transparent, #ff6b6b, #ffa726, #3f51b5, #00bcd4, transparent);
+            border-radius: 3px;
+            box-shadow: 0 2px 10px rgba(63, 81, 181, 0.3);
+        }
+
+        .rating-section::after {
+            content: '⭐ ⭐ ⭐';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #3f51b5;
+            border: 2px solid #3f51b5;
+            box-shadow: 0 4px 15px rgba(63, 81, 181, 0.2);
+        }
+
+        .rating-section h3 {
+            color: #3f51b5;
+            margin-bottom: 35px;
+            font-size: 26px;
+            text-align: center;
+            position: relative;
+            padding: 20px 0;
+            background: linear-gradient(135deg, #3f51b5 0%, #00bcd4 100%);
+            color: white;
+            border-radius: 12px;
+            margin: -20px -20px 35px -20px;
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);
+        }
+
+        .rating-section h3::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #3f51b5;
+        }
+
+        .rating-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .rating-item:hover {
+            border-color: #3f51b5;
+            box-shadow: 0 4px 15px rgba(63, 81, 181, 0.1);
+        }
+
+        .rating-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .rating-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 4px 8px;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .rating-label:hover {
+            background: rgba(63, 81, 181, 0.1);
+            color: #3f51b5;
+        }
+
+        .rating-label::after {
+            content: "✏️";
+            font-size: 10px;
+            opacity: 0;
+            margin-left: 4px;
+            transition: opacity 0.3s ease;
+        }
+
+        .rating-label:hover::after {
+            opacity: 0.7;
+        }
+
+        .rating-description {
+            font-size: 12px;
+            color: #666;
+            font-weight: normal;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        .rating-delete {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .rating-delete:hover {
+            background: #ff3742;
+            transform: scale(1.05);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .star {
+            font-size: 28px;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .star:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .star.active {
+            color: #ffd700;
+            transform: scale(1.05);
+        }
+
+        .rating-value {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px 0;
+        }
+
+        .add-question-section {
+            text-align: center;
+            margin: 40px 0 20px 0;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        .add-question-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e1e8ed, transparent);
+        }
+
+        @media (max-width: 768px) {
+            .rating-item {
+                padding: 15px;
+            }
+            
+            .star {
+                font-size: 24px;
+            }
+            
+            .rating-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+
+        .export-info {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .export-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-ready { background: #dcfce7; color: #166534; }
+        .status-demo { background: #fef3c7; color: #92400e; }
+        .status-requires { background: #fecaca; color: #991b1b; }
+
+        .report {
+            display: none;
+            padding: 40px;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3f51b5;
+        }
+
+        .report-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .report-meta {
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        .report-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .report-section h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .report-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 20px;
+        }
+
+        .report-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow: hidden;
+        }
+
+        .report-image {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #f8fafc;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .report-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .report-image img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+        }
+
+        .back-to-form {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 15px;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .question-item {
+                padding: 20px;
+            }
+            
+            .thumbnails {
+                justify-content: center;
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)) !important;
+                max-width: 100% !important;
+                gap: 4px;
+            }
+            
+            .thumbnail {
+                aspect-ratio: 1;
+            }
+            
+            .thumbnail-delete {
+                width: 16px;
+                height: 16px;
+                font-size: 9px;
+                opacity: 1;
+            }
+            
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Image Modal/Lightbox */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 95%;
+            max-height: 95%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .image-modal.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10001;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* Themen-Dropdown */
+        .theme-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 2px solid #3f51b5;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);
+            z-index: 1000;
+            min-width: 280px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .theme-dropdown.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+            border-left: 4px solid #3f51b5;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .dropdown-item-desc {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .dropdown-custom {
+            padding: 16px;
+            border-top: 2px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .dropdown-custom input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .dropdown-custom input:focus {
+            outline: none;
+            border-color: #3f51b5;
+            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.1);
+        }
+
+        .dropdown-custom-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .dropdown-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-btn-primary {
+            background: #3f51b5;
+            color: white;
+        }
+
+        .dropdown-btn-primary:hover {
+            background: #303f9f;
+        }
+
+        .dropdown-btn-secondary {
+            background: #e2e8f0;
+            color: #666;
+        }
+
+        .dropdown-btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .question-number {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="budni-logo">
+                <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="90" cy="90" r="70" fill="#00bcd4"/>
+                    <circle cx="210" cy="90" r="65" fill="#ff6b6b"/>
+                    <circle cx="150" cy="90" r="85" fill="#3f51b5"/>
+                    <text x="150" y="103" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">budni</text>
+                    <circle cx="195" cy="75" r="3" fill="white"/>
+                </svg>
+            </div>
+            <h1>Filialbesuch Feedback</h1>
+        </div>
+
+        <div id="auditForm" class="form-section">
+            <!-- Audit Details Section -->
+            <div class="location-section">
+                <div class="form-group">
+                    <label for="auditorName">👤 Name des Besuchers (optional):</label>
+                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)">
+                </div>
+                
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 200px;">
+                        <label for="auditDate">📅 Datum:</label>
+                        <input type="date" id="auditDate">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 200px;">
+                        <label for="auditTime">🕐 Uhrzeit:</label>
+                        <input type="time" id="auditTime">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="locationType">📍 Standort-Typ:</label>
+                    <select id="locationType" onchange="toggleLocationDetails()">
+                        <option value="">Bitte auswählen...</option>
+                        <option value="own">Budni Filiale</option>
+                        <option value="competitor">Wettbewerb</option>
+                    </select>
+                </div>
+
+                <div id="ownBusinessSection" class="form-group" style="display: none;">
+                    <label for="ownBusiness">🏢 Budni Filiale:</label>
+                    <select id="ownBusiness">
+                        <option value="">Filiale auswählen...</option>
+                        <option value="Ahrensburg / Hamburger Str. 4-8 (727)">Ahrensburg / Hamburger Str. 4-8 (727)</option>
+                        <option value="Ahrensburg / Rathausplatz 15 (174)">Ahrensburg / Rathausplatz 15 (174)</option>
+                        <option value="Alsterdorf / Alsterdorfer Str. 206 (792)">Alsterdorf / Alsterdorfer Str. 206 (792)</option>
+                        <option value="Altona-Altstadt / Holstenstraße 111 (193)">Altona-Altstadt / Holstenstraße 111 (193)</option>
+                        <option value="Altona-Altstadt / Neue Große Bergstraße 18 (214)">Altona-Altstadt / Neue Große Bergstraße 18 (214)</option>
+                        <option value="Altstadt / Bergstrasse 16 (101)">Altstadt / Bergstrasse 16 (101)</option>
+                        <option value="Ammersbek / Hamburger Straße 101 (276)">Ammersbek / Hamburger Straße 101 (276)</option>
+                        <option value="Apensen / Beckdorfer Straße 18 (190)">Apensen / Beckdorfer Straße 18 (190)</option>
+                        <option value="Bad Oldesloe / Lübecker Straße 23-25 (230)">Bad Oldesloe / Lübecker Straße 23-25 (230)</option>
+                        <option value="Bad Segeberg / Ziegelstrasse 105-107 (138)">Bad Segeberg / Ziegelstrasse 105-107 (138)</option>
+                        <option value="Bahrenfeld / Gasstraße 6b (261)">Bahrenfeld / Gasstraße 6b (261)</option>
+                        <option value="Bahrenfeld / Osdorfer Weg 106 (148)">Bahrenfeld / Osdorfer Weg 106 (148)</option>
+                        <option value="Barendorf / Im Stadtkamp 1 (256)">Barendorf / Im Stadtkamp 1 (256)</option>
+                        <option value="Bargteheide / Rathausstraße 13-15 (717)">Bargteheide / Rathausstraße 13-15 (717)</option>
+                        <option value="Barmbek-Nord / Alter Güterbahnhof 2 (241)">Barmbek-Nord / Alter Güterbahnhof 2 (241)</option>
+                        <option value="Barmbek-Nord / Fuhlsbüttler Str. 107-109 (301)">Barmbek-Nord / Fuhlsbüttler Str. 107-109 (301)</option>
+                        <option value="Barmbek-Nord / Fuhlsbüttler Straße 164 (181)">Barmbek-Nord / Fuhlsbüttler Straße 164 (181)</option>
+                        <option value="Barmbek-Nord / Fuhlsbüttler Straße 401 (164)">Barmbek-Nord / Fuhlsbüttler Straße 401 (164)</option>
+                        <option value="Barmbek-Süd / Hamburger Str. 47-49 (764)">Barmbek-Süd / Hamburger Str. 47-49 (764)</option>
+                        <option value="Barmbek-Süd / Mozartstraße 16 (168)">Barmbek-Süd / Mozartstraße 16 (168)</option>
+                        <option value="Barsbüttel / Am Akku 9 (234)">Barsbüttel / Am Akku 9 (234)</option>
+                        <option value="Bergedorf / Bergedorfer Str. 133 (407)">Bergedorf / Bergedorfer Str. 133 (407)</option>
+                        <option value="Bergedorf / Friedrich-Frank-Bogen 166 (250)">Bergedorf / Friedrich-Frank-Bogen 166 (250)</option>
+                        <option value="Bergedorf / Kupferhof 7 (757)">Bergedorf / Kupferhof 7 (757)</option>
+                        <option value="Bergstedt / Wohldorfer Damm 1- 1a (253)">Bergstedt / Wohldorfer Damm 1- 1a (253)</option>
+                        <option value="Berlin / Bundesalle 86/89 (555)">Berlin / Bundesalle 86/89 (555)</option>
+                        <option value="Berlin / Frankfurter Allee 35-37 (552)">Berlin / Frankfurter Allee 35-37 (552)</option>
+                        <option value="Berlin / Friedenstraße 90 (556)">Berlin / Friedenstraße 90 (556)</option>
+                        <option value="Berlin / Friedrichstraße 149 (554)">Berlin / Friedrichstraße 149 (554)</option>
+                        <option value="Berlin / Güntzelstraße 48 (553)">Berlin / Güntzelstraße 48 (553)</option>
+                        <option value="Berlin / Martin-Luther Str. 48 (560)">Berlin / Martin-Luther Str. 48 (560)</option>
+                        <option value="Berlin / Rankestraße 33-34 (557)">Berlin / Rankestraße 33-34 (557)</option>
+                        <option value="Berlin / Revaler Straße 33 (561)">Berlin / Revaler Straße 33 (561)</option>
+                        <option value="Berlin / Schönhauser Allee 12 (551)">Berlin / Schönhauser Allee 12 (551)</option>
+                        <option value="Berlin / Schönhauser Allee 120 (550)">Berlin / Schönhauser Allee 120 (550)</option>
+                        <option value="Berlin / Wilmersdorfer Straße 60 (558)">Berlin / Wilmersdorfer Straße 60 (558)</option>
+                        <option value="Billstedt / Billstedter Platz 2 (183)">Billstedt / Billstedter Platz 2 (183)</option>
+                        <option value="Blankenese / Propst-Paulsen-Str. 2 (208)">Blankenese / Propst-Paulsen-Str. 2 (208)</option>
+                        <option value="Blankenese / Sülldorfer Kirchenweg 1-3 (761)">Blankenese / Sülldorfer Kirchenweg 1-3 (761)</option>
+                        <option value="Börnsen / Hermann-Wöhlke-Weg 2 (191)">Börnsen / Hermann-Wöhlke-Weg 2 (191)</option>
+                        <option value="Bramfeld / Bramfelder Chaussee 230 (165)">Bramfeld / Bramfelder Chaussee 230 (165)</option>
+                        <option value="Bramfeld / Pezolddamm 147 (213)">Bramfeld / Pezolddamm 147 (213)</option>
+                        <option value="Büchen / Schlickweg 2 (287)">Büchen / Schlickweg 2 (287)</option>
+                        <option value="Buchholz / Breite Str. 5 (707)">Buchholz / Breite Str. 5 (707)</option>
+                        <option value="Buchholz / Soltauer Straße 93 (196)">Buchholz / Soltauer Straße 93 (196)</option>
+                        <option value="Buxtehude / Stader Straße 2 (788)">Buxtehude / Stader Straße 2 (788)</option>
+                        <option value="Buxtehude / Zwischen den Brücken 1 (748)">Buxtehude / Zwischen den Brücken 1 (748)</option>
+                        <option value="Dollern / Am Buschteich 26 (255)">Dollern / Am Buschteich 26 (255)</option>
+                        <option value="Duvenstedt / Poppenbüttler Chaussee 36 (155)">Duvenstedt / Poppenbüttler Chaussee 36 (155)</option>
+                        <option value="Eidelstedt / Eidelstedter Platz 1 (731)">Eidelstedt / Eidelstedter Platz 1 (731)</option>
+                        <option value="Eilbek / Conventstraße 8-10 (262)">Eilbek / Conventstraße 8-10 (262)</option>
+                        <option value="Eilbek / Landwehr 34 (713)">Eilbek / Landwehr 34 (713)</option>
+                        <option value="Eimsbüttel / Eimsbütteler Chaussee 85 (216)">Eimsbüttel / Eimsbütteler Chaussee 85 (216)</option>
+                        <option value="Eimsbüttel / Müggenkampstraße 4 (775)">Eimsbüttel / Müggenkampstraße 4 (775)</option>
+                        <option value="Eimsbüttel / Osterstr. 1 (122)">Eimsbüttel / Osterstr. 1 (122)</option>
+                        <option value="Eimsbüttel / Osterstr. 95 (203)">Eimsbüttel / Osterstr. 95 (203)</option>
+                        <option value="Eppendorf / Eppendorfer Baum 39 (602)">Eppendorf / Eppendorfer Baum 39 (602)</option>
+                        <option value="Eppendorf / Eppendorfer Landstr. 67 (711)">Eppendorf / Eppendorfer Landstr. 67 (711)</option>
+                        <option value="Eppendorf / Eppendorfer Landstrasse 77 (145)">Eppendorf / Eppendorfer Landstrasse 77 (145)</option>
+                        <option value="Eppendorf / Martinistraße 64 (200)">Eppendorf / Martinistraße 64 (200)</option>
+                        <option value="Farmsen-Berne / Berner Heerweg 173-175 (603)">Farmsen-Berne / Berner Heerweg 173-175 (603)</option>
+                        <option value="Finkenwerder / Steendiek 43 (708)">Finkenwerder / Steendiek 43 (708)</option>
+                        <option value="Fuhlsbüttel / Erdkampsweg 47-49 (755)">Fuhlsbüttel / Erdkampsweg 47-49 (755)</option>
+                        <option value="Geesthacht / Norderstraße 16 (270)">Geesthacht / Norderstraße 16 (270)</option>
+                        <option value="Glinde / Markt 3 (410)">Glinde / Markt 3 (410)</option>
+                        <option value="Groß Borstel / Borsteler Chaussee 111-113 (747)">Groß Borstel / Borsteler Chaussee 111-113 (747)</option>
+                        <option value="Gross Flottbek / Waitzstrasse 29 (140)">Gross Flottbek / Waitzstrasse 29 (140)</option>
+                        <option value="Grosshansdorf / Eilbergweg 11 (218)">Grosshansdorf / Eilbergweg 11 (218)</option>
+                        <option value="HafenCity / Überseeboulevard 7 (281)">HafenCity / Überseeboulevard 7 (281)</option>
+                        <option value="Halstenbek / Seestrasse 250 (147)">Halstenbek / Seestrasse 250 (147)</option>
+                        <option value="Hamm / Hammer Landstraße 84 (279)">Hamm / Hammer Landstraße 84 (279)</option>
+                        <option value="Hamm-Mitte / Droopweg 25 (152)">Hamm-Mitte / Droopweg 25 (152)</option>
+                        <option value="Hamm-Nord / Hammer Steindamm 72-74 (192)">Hamm-Nord / Hammer Steindamm 72-74 (192)</option>
+                        <option value="Hammerbrook / Sonninstraße 1-5 (278)">Hammerbrook / Sonninstraße 1-5 (278)</option>
+                        <option value="Hanstedt / Winsener Straße 1-3 (264)">Hanstedt / Winsener Straße 1-3 (264)</option>
+                        <option value="Harburg / Hannoversche Straße 86 (273)">Harburg / Hannoversche Straße 86 (273)</option>
+                        <option value="Harburg / Lüneburger Str. 39 (737)">Harburg / Lüneburger Str. 39 (737)</option>
+                        <option value="Harburg / Sand 10 (501)">Harburg / Sand 10 (501)</option>
+                        <option value="Harsefeld / Buxtehuder Str. 11 (735)">Harsefeld / Buxtehuder Str. 11 (735)</option>
+                        <option value="Harvestehude / Grindelberg 7 (151)">Harvestehude / Grindelberg 7 (151)</option>
+                        <option value="Heimfeld / Heimfelder Str. 46 (766)">Heimfeld / Heimfelder Str. 46 (766)</option>
+                        <option value="Heimfeld / Stader Straße 136 (231)">Heimfeld / Stader Straße 136 (231)</option>
+                        <option value="Henstedt-Ulzburg / Dammstücken 29-33 (274)">Henstedt-Ulzburg / Dammstücken 29-33 (274)</option>
+                        <option value="Hittfeld / Kirchstrasse 26 (172)">Hittfeld / Kirchstrasse 26 (172)</option>
+                        <option value="Hoheluft-Ost / Hoheluftchaussee 52 (212)">Hoheluft-Ost / Hoheluftchaussee 52 (212)</option>
+                        <option value="Horn / Graßmannweg 6-13 (219)">Horn / Graßmannweg 6-13 (219)</option>
+                        <option value="Horn / Rennbahnstr. 30-38 (723)">Horn / Rennbahnstr. 30-38 (723)</option>
+                        <option value="Hummelsbüttel / Hummelsbüttler Hauptstr. 62 (127)">Hummelsbüttel / Hummelsbüttler Hauptstr. 62 (127)</option>
+                        <option value="Jesteburg / Brückenstraße 11 (217)">Jesteburg / Brückenstraße 11 (217)</option>
+                        <option value="Kaltenkirchen / Am Bahnhof 2-12 (763)">Kaltenkirchen / Am Bahnhof 2-12 (763)</option>
+                        <option value="Langenhorn / Krohnstieg 41-43 (269)">Langenhorn / Krohnstieg 41-43 (269)</option>
+                        <option value="Langenhorn / Langenhorner Chaussee 666 (238)">Langenhorn / Langenhorner Chaussee 666 (238)</option>
+                        <option value="Lohbrügge / Am Beckerkamp 17 (291)">Lohbrügge / Am Beckerkamp 17 (291)</option>
+                        <option value="Lohbrügge / Heidhorst 4 (226)">Lohbrügge / Heidhorst 4 (226)</option>
+                        <option value="Lokstedt / Vogt-Wells-Straße 6 (229)">Lokstedt / Vogt-Wells-Straße 6 (229)</option>
+                        <option value="Lübeck / Heiligen-Geist-Kamp 4 (235)">Lübeck / Heiligen-Geist-Kamp 4 (235)</option>
+                        <option value="Lübeck / Mühlenstraße 22-24 (286)">Lübeck / Mühlenstraße 22-24 (286)</option>
+                        <option value="Lüneburg / Am Sande 50 (738)">Lüneburg / Am Sande 50 (738)</option>
+                        <option value="Lüneburg / Bei der Keulahütte 1 (793)">Lüneburg / Bei der Keulahütte 1 (793)</option>
+                        <option value="Lüneburg / Feldstrasse 1 (128)">Lüneburg / Feldstrasse 1 (128)</option>
+                        <option value="Lurup / Elbgaustrasse 128 (153)">Lurup / Elbgaustrasse 128 (153)</option>
+                        <option value="Lurup / Luruper Hauptstraße 272a (194)">Lurup / Luruper Hauptstraße 272a (194)</option>
+                        <option value="Marienthal / Rennbahnstrasse 135 (136)">Marienthal / Rennbahnstrasse 135 (136)</option>
+                        <option value="Marmstorf / Ernst-Bergeest-Weg 57 a (705)">Marmstorf / Ernst-Bergeest-Weg 57 a (705)</option>
+                        <option value="Maschen / Schulstraße 38 (237)">Maschen / Schulstraße 38 (237)</option>
+                        <option value="Meckelfeld / Am Saal 20 (123)">Meckelfeld / Am Saal 20 (123)</option>
+                        <option value="Mölln / Grambeker Weg 91-93 (124)">Mölln / Grambeker Weg 91-93 (124)</option>
+                        <option value="Mundsburg Center / Hamburger Straße 1-15 (179)">Mundsburg Center / Hamburger Straße 1-15 (179)</option>
+                        <option value="Nahe / Segeberger Strasse 30 (173)">Nahe / Segeberger Strasse 30 (173)</option>
+                        <option value="Neu Wulmstorf / Wulmstorfer Wiesen 2a (185)">Neu Wulmstorf / Wulmstorfer Wiesen 2a (185)</option>
+                        <option value="Neuengamme / Heinrich-Stubbe-Weg 13-15 (254)">Neuengamme / Heinrich-Stubbe-Weg 13-15 (254)</option>
+                        <option value="Neugraben-Fischbek / Lütt Enn 3 (505)">Neugraben-Fischbek / Lütt Enn 3 (505)</option>
+                        <option value="Neustadt / Dammtorstr. 33-35 (784)">Neustadt / Dammtorstr. 33-35 (784)</option>
+                        <option value="Neustadt / Wexstr. 25 (760)">Neustadt / Wexstr. 25 (760)</option>
+                        <option value="Neuwiedenthal / Rehrstieg 28 (225)">Neuwiedenthal / Rehrstieg 28 (225)</option>
+                        <option value="Niedermarschacht / Elbuferstrasse 116 (159)">Niedermarschacht / Elbuferstrasse 116 (159)</option>
+                        <option value="Niendorf / Paul-Sorge-Str. 8 (730)">Niendorf / Paul-Sorge-Str. 8 (730)</option>
+                        <option value="Niendorf / Wagrier Weg 2-8 (149)">Niendorf / Wagrier Weg 2-8 (149)</option>
+                        <option value="Nienstedten / Nienstedtener Straße 2e (215)">Nienstedten / Nienstedtener Straße 2e (215)</option>
+                        <option value="Norderstedt / Berliner Allee 42 (753)">Norderstedt / Berliner Allee 42 (753)</option>
+                        <option value="Norderstedt / Rathausallee 31a/33a (252)">Norderstedt / Rathausallee 31a/33a (252)</option>
+                        <option value="Norderstedt / Schmuggelstieg 6 (309)">Norderstedt / Schmuggelstieg 6 (309)</option>
+                        <option value="Norderstedt / Ulzburger Strasse 360 (150)">Norderstedt / Ulzburger Strasse 360 (150)</option>
+                        <option value="Osdorf / Osdorfer Landstrasse 131-135 (129)">Osdorf / Osdorfer Landstrasse 131-135 (129)</option>
+                        <option value="Osdorf / Rugenbarg 18 (239)">Osdorf / Rugenbarg 18 (239)</option>
+                        <option value="Oststeinbek / Möllner Landstrasse 30 (144)">Oststeinbek / Möllner Landstrasse 30 (144)</option>
+                        <option value="Othmarschen / Jürgen-Töpfer-Straße 18 (224)">Othmarschen / Jürgen-Töpfer-Straße 18 (224)</option>
+                        <option value="Ottensen / Bahrenfelder Straße 134 (266)">Ottensen / Bahrenfelder Straße 134 (266)</option>
+                        <option value="Ottensen / Ottenser Hauptstraße 10 (187)">Ottensen / Ottenser Hauptstraße 10 (187)</option>
+                        <option value="Pinneberg / Richard-Köhn-Str. 1 (796)">Pinneberg / Richard-Köhn-Str. 1 (796)</option>
+                        <option value="Poppenbüttel / Heegbarg 31 (762)">Poppenbüttel / Heegbarg 31 (762)</option>
+                        <option value="Poppenbüttel / Moorhof 7a (781)">Poppenbüttel / Moorhof 7a (781)</option>
+                        <option value="Poppenbüttel / Poppenbütteler Bogen 98 (289)">Poppenbüttel / Poppenbütteler Bogen 98 (289)</option>
+                        <option value="Quickborn / Bahnhofstraße 104 (746)">Quickborn / Bahnhofstraße 104 (746)</option>
+                        <option value="Rahlstedt / Bargteheider Straße 20-22 (220)">Rahlstedt / Bargteheider Straße 20-22 (220)</option>
+                        <option value="Rahlstedt / Meiendorfer Strasse 89 (135)">Rahlstedt / Meiendorfer Strasse 89 (135)</option>
+                        <option value="Rahlstedt / Rahlstedter Bahnhofstrasse 17 (176)">Rahlstedt / Rahlstedter Bahnhofstrasse 17 (176)</option>
+                        <option value="Rahlstedt / Scharbeutzer Straße 102a-c (236)">Rahlstedt / Scharbeutzer Straße 102a-c (236)</option>
+                        <option value="Rahlstedt / Schweriner Strasse 8-12 (141)">Rahlstedt / Schweriner Strasse 8-12 (141)</option>
+                        <option value="Reinbek / Am Ladenzentrum 7 (126)">Reinbek / Am Ladenzentrum 7 (126)</option>
+                        <option value="Reinbek / Sachsenwaldstr. 20 (791)">Reinbek / Sachsenwaldstr. 20 (791)</option>
+                        <option value="Rellingen / Hauptstrasse 105 (133)">Rellingen / Hauptstrasse 105 (133)</option>
+                        <option value="Rissen / Wedeler Landstraße 56 (242)">Rissen / Wedeler Landstraße 56 (242)</option>
+                        <option value="Rothenburgsort / Lindleystraße 2 (782)">Rothenburgsort / Lindleystraße 2 (782)</option>
+                        <option value="Rotherbaum / Grindelallee 110-114 (201)">Rotherbaum / Grindelallee 110-114 (201)</option>
+                        <option value="Rotherbaum / Milchstraße 1 (785)">Rotherbaum / Milchstraße 1 (785)</option>
+                        <option value="Sasel / Saseler Markt 14a (228)">Sasel / Saseler Markt 14a (228)</option>
+                        <option value="Schenefeld / Industriestraße 1 (188)">Schenefeld / Industriestraße 1 (188)</option>
+                        <option value="Schnelsen / Frohmestraße 48 (198)">Schnelsen / Frohmestraße 48 (198)</option>
+                        <option value="Schwarzenbek / Compestrasse 1 (146)">Schwarzenbek / Compestrasse 1 (146)</option>
+                        <option value="St. Pauli / Clemens-Schultz-Strasse 38 (104)">St. Pauli / Clemens-Schultz-Strasse 38 (104)</option>
+                        <option value="St. Pauli / Neuer Kamp 31 (233)">St. Pauli / Neuer Kamp 31 (233)</option>
+                        <option value="St. Pauli / Talstraße 36 (774)">St. Pauli / Talstraße 36 (774)</option>
+                        <option value="St.Georg / Lange Reihe 104-106 (175)">St.Georg / Lange Reihe 104-106 (175)</option>
+                        <option value="St.Georg / Lange Reihe 18-20 (178)">St.Georg / Lange Reihe 18-20 (178)</option>
+                        <option value="St.Georg / Steindamm 55 (282)">St.Georg / Steindamm 55 (282)</option>
+                        <option value="Stade / Steile Straße 1 (248)">Stade / Steile Straße 1 (248)</option>
+                        <option value="Steilshoop / Steilshooper Str. 281 (773)">Steilshoop / Steilshooper Str. 281 (773)</option>
+                        <option value="Stelle / Harburger Straße 25 c (772)">Stelle / Harburger Straße 25 c (772)</option>
+                        <option value="Stellingen / Kieler Str. 561-573 (745)">Stellingen / Kieler Str. 561-573 (745)</option>
+                        <option value="Stellingen / Langenfelder Damm 62 (767)">Stellingen / Langenfelder Damm 62 (767)</option>
+                        <option value="Sternschanze / Schanzenstraße 55 (768)">Sternschanze / Schanzenstraße 55 (768)</option>
+                        <option value="Sternschanze / Schulterblatt 135 (268)">Sternschanze / Schulterblatt 135 (268)</option>
+                        <option value="Sternschanze / Schulterblatt 45 (105)">Sternschanze / Schulterblatt 45 (105)</option>
+                        <option value="Tangstedt / Eichholzkoppel 1 (267)">Tangstedt / Eichholzkoppel 1 (267)</option>
+                        <option value="Timmendorfer Strand / Strandallee 81 (290)">Timmendorfer Strand / Strandallee 81 (290)</option>
+                        <option value="Tonndorf / Ahrensburger Strasse 150-152 (131)">Tonndorf / Ahrensburger Strasse 150-152 (131)</option>
+                        <option value="Tornesch / Ohlenhoff 4 (184)">Tornesch / Ohlenhoff 4 (184)</option>
+                        <option value="Tostedt / Unter den Linden 5 (758)">Tostedt / Unter den Linden 5 (758)</option>
+                        <option value="Tostedt / Zinnhütte 12 (280)">Tostedt / Zinnhütte 12 (280)</option>
+                        <option value="Trittau / Poststraße 27-29 (245)">Trittau / Poststraße 27-29 (245)</option>
+                        <option value="Uhlenhorst / Hofweg 46-48 (180)">Uhlenhorst / Hofweg 46-48 (180)</option>
+                        <option value="Volksdorf / Claus-Ferck-Straße 8 (186)">Volksdorf / Claus-Ferck-Straße 8 (186)</option>
+                        <option value="Volksdorf / Weiße Rose 8 (795)">Volksdorf / Weiße Rose 8 (795)</option>
+                        <option value="Wandsbek / Friedrich-Ebert-Damm 79-85 (221)">Wandsbek / Friedrich-Ebert-Damm 79-85 (221)</option>
+                        <option value="Wandsbek / Wandsbeker Marktstraße 103-107 (272)">Wandsbek / Wandsbeker Marktstraße 103-107 (272)</option>
+                        <option value="Wandsbek / Wandsbeker Marktstraße 2 (288)">Wandsbek / Wandsbeker Marktstraße 2 (288)</option>
+                        <option value="Wedel / Am Marienhof 1, 3 (263)">Wedel / Am Marienhof 1, 3 (263)</option>
+                        <option value="Wedel / Bahnhofstraße 31 (776)">Wedel / Bahnhofstraße 31 (776)</option>
+                        <option value="Wedel / Rissener Straße 125 (257)">Wedel / Rissener Straße 125 (257)</option>
+                        <option value="Wellingsbüttel / Wellingsbüttler Weg 125 (177)">Wellingsbüttel / Wellingsbüttler Weg 125 (177)</option>
+                        <option value="Wenningstedt/Sylt / Osterweg 2 (771)">Wenningstedt/Sylt / Osterweg 2 (771)</option>
+                        <option value="Wentorf / Berliner Landstraße 4-6 (249)">Wentorf / Berliner Landstraße 4-6 (249)</option>
+                        <option value="Wilhelmsburg / Vogelhüttendeich 48 (756)">Wilhelmsburg / Vogelhüttendeich 48 (756)</option>
+                        <option value="Wilhelmsburg / Wilhelm-Strauß-Weg 2b (736)">Wilhelmsburg / Wilhelm-Strauß-Weg 2b (736)</option>
+                        <option value="Winsen / Löhnfeld 10 (740)">Winsen / Löhnfeld 10 (740)</option>
+                        <option value="Winsen / Rathausstraße 33 (197)">Winsen / Rathausstraße 33 (197)</option>
+                        <option value="Winterhude / Gertigstraße 24 (275)">Winterhude / Gertigstraße 24 (275)</option>
+                        <option value="Winterhude / Hudtwalckerstr. 19-21 (304)">Winterhude / Hudtwalckerstr. 19-21 (304)</option>
+                        <option value="Winterhude / Jarrestr. 47 (749)">Winterhude / Jarrestr. 47 (749)</option>
+                        <option value="Winterhude / Mühlenkamp 43 (305)">Winterhude / Mühlenkamp 43 (305)</option>
+                    </select>
+                </div>
+
+                <div id="competitorSection" class="form-group" style="display: none;">
+                    <label for="competitor">🏪 Wettbewerb:</label>
+                    <select id="competitor">
+                        <option value="">Wettbewerber auswählen...</option>
+                        <option value="dm">dm</option>
+                        <option value="Rossmann">Rossmann</option>
+                        <option value="Müller">Müller</option>
+                        <option value="Andere">Andere</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Questions Section -->
+            <div id="questionsContainer">
+                <div class="question-item" data-question="1">
+                    <div class="question-header">
+                        <div class="question-header-left">
+                            <button type="button" class="question-number" onclick="editTitle(1)" title="Klicken zum Bearbeiten des Themen-Titels">Thema 1</button>
+                            <button type="button" class="camera-icon" onclick="triggerFileInput(1)" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
+                        </div>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(1)" style="display: none;">✕ Löschen</button>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Ihre Beobachtung:</label>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." 
+                                  oninput="handleTextInput(1)" 
+                                  onchange="handleTextInput(1)"></textarea>
+                    </div>
+                    <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(1, this)">
+                    <div class="thumbnails"></div>
+                </div>
+            </div>
+
+            <!-- Add Question Button -->
+            <div class="add-question-section">
+                <button type="button" class="btn btn-secondary" onclick="addQuestion()">
+                    ➕ Weiteres Thema hinzufügen
+                </button>
+            </div>
+
+            <!-- Rating Section -->
+            <div class="rating-section">
+                <h3>⭐ Bewertung der Bereiche</h3>
+                <div id="ratingsContainer">
+                    <div class="rating-item" data-rating="aussenbereich">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('aussenbereich')" title="Klicken zum Bearbeiten">Außenbereich</div>
+                                <div class="rating-description">Warenfülle Schütten, Unkraut, Markise</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('aussenbereich')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="aussenbereich">
+                            <span class="star" data-value="1" onclick="setRating('aussenbereich', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('aussenbereich', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('aussenbereich', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('aussenbereich', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('aussenbereich', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-aussenbereich">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="sauberkeit">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('sauberkeit')" title="Klicken zum Bearbeiten">Sauberkeit</div>
+                                <div class="rating-description">Genereller Eindruck, Spinnweben, Reinigungsleistung Boden</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('sauberkeit')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="sauberkeit">
+                            <span class="star" data-value="1" onclick="setRating('sauberkeit', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('sauberkeit', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('sauberkeit', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('sauberkeit', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('sauberkeit', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-sauberkeit">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="aktionszone">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('aktionszone')" title="Klicken zum Bearbeiten">Aktionszone</div>
+                                <div class="rating-description">Aktionsmeter, Saisonwand</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('aktionszone')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="aktionszone">
+                            <span class="star" data-value="1" onclick="setRating('aktionszone', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('aktionszone', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('aktionszone', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('aktionszone', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('aktionszone', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-aktionszone">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="dekorative-kosmetik">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('dekorative-kosmetik')" title="Klicken zum Bearbeiten">Dekorative Kosmetik</div>
+                                <div class="rating-description">Ordnung, Abverkaufsware, Spiegel</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('dekorative-kosmetik')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="dekorative-kosmetik">
+                            <span class="star" data-value="1" onclick="setRating('dekorative-kosmetik', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('dekorative-kosmetik', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('dekorative-kosmetik', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('dekorative-kosmetik', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('dekorative-kosmetik', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-dekorative-kosmetik">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="regalbild">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('regalbild')" title="Klicken zum Bearbeiten">Regalbild</div>
+                                <div class="rating-description">vorgezogen, OOS Situation, FL zugestellt</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('regalbild')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="regalbild">
+                            <span class="star" data-value="1" onclick="setRating('regalbild', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('regalbild', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('regalbild', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('regalbild', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('regalbild', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-regalbild">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="mopro">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('mopro')" title="Klicken zum Bearbeiten">Mopro</div>
+                                <div class="rating-description">Warenfülle, Top 50, Reduzierungen</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('mopro')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="mopro">
+                            <span class="star" data-value="1" onclick="setRating('mopro', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('mopro', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('mopro', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('mopro', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('mopro', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-mopro">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="marketingmittel">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('marketingmittel')" title="Klicken zum Bearbeiten">Marketingmittel</div>
+                                <div class="rating-description">Vollständigkeit, kein Tesa</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('marketingmittel')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="marketingmittel">
+                            <span class="star" data-value="1" onclick="setRating('marketingmittel', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('marketingmittel', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('marketingmittel', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('marketingmittel', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('marketingmittel', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-marketingmittel">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="ordnung-kasse">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('ordnung-kasse')" title="Klicken zum Bearbeiten">Ordnung Kasse</div>
+                                <div class="rating-description">keine Plakate, keine Flyer, freie Arbeitsplätze</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('ordnung-kasse')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="ordnung-kasse">
+                            <span class="star" data-value="1" onclick="setRating('ordnung-kasse', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('ordnung-kasse', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('ordnung-kasse', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('ordnung-kasse', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('ordnung-kasse', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-ordnung-kasse">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="pausenraum">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('pausenraum')" title="Klicken zum Bearbeiten">Pausenraum</div>
+                                <div class="rating-description">Pflegezustand, Kühlschrank</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('pausenraum')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="pausenraum">
+                            <span class="star" data-value="1" onclick="setRating('pausenraum', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('pausenraum', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('pausenraum', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('pausenraum', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('pausenraum', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-pausenraum">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="lager">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('lager')" title="Klicken zum Bearbeiten">Lager</div>
+                                <div class="rating-description">Ordnung, Füllstand Rollis</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('lager')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="lager">
+                            <span class="star" data-value="1" onclick="setRating('lager', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('lager', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('lager', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('lager', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('lager', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-lager">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="packtische">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('packtische')" title="Klicken zum Bearbeiten">Packtische</div>
+                                <div class="rating-description">sauber und nicht überfrachtet</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('packtische')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="packtische">
+                            <span class="star" data-value="1" onclick="setRating('packtische', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('packtische', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('packtische', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('packtische', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('packtische', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-packtische">Noch nicht bewertet</div>
+                    </div>
+
+                    <div class="rating-item" data-rating="displayzustand">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('displayzustand')" title="Klicken zum Bearbeiten">Displayzustand</div>
+                                <div class="rating-description">Befüllung, rechtzeitiger Abbau</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('displayzustand')">✕ Entfernen</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="displayzustand">
+                            <span class="star" data-value="1" onclick="setRating('displayzustand', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('displayzustand', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('displayzustand', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('displayzustand', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('displayzustand', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-displayzustand">Noch nicht bewertet</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-success" onclick="generateReport()">
+                    📊 Feedback erstellen
+                </button>
+                <button type="button" class="btn btn-reset" onclick="resetForm()">
+                    🔄 Neues Feedback
+                </button>
+            </div>
+        </div>
+
+        <div id="reportView" class="report">
+            <button type="button" class="btn back-to-form" onclick="backToForm()">
+                ← Zurück zum Formular
+            </button>
+            
+            <div class="report-header">
+                <h1 class="report-title">Besuchsfeedback</h1>
+                <div class="report-meta">
+                    <p id="reportDate"></p>
+                    <p id="reportLocation"></p>
+                </div>
+            </div>
+
+            <div id="reportContent"></div>
+
+            <div class="export-info">
+                <h4>📤 Export-Optionen:</h4>
+                <p><strong>📱 Als HTML teilen</strong> <span class="export-status status-ready">Verfügbar</span><br>
+                Komprimierte HTML-Datei für E-Mail und Archivierung</p>
+                <p><strong>💾 Als ZIP herunterladen</strong> <span class="export-status status-ready">Vollständig</span><br>
+                HTML-Report + Original-Bilder + Anleitung</p>
+                <p><strong>🎯 Features:</strong> Druckerfreundlich, responsive, seitenverhältnistreu</p>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-secondary" onclick="shareReport()">
+                    📱 Als HTML teilen
+                </button>
+                <button type="button" class="btn" onclick="downloadAsZIP()">
+                    💾 Als ZIP herunterladen
+                </button>
+                <button type="button" class="btn btn-reset" onclick="resetForm()">
+                    🔄 Neues Feedback
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <div class="modal-overlay" onclick="closeImageModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeImageModal()">✕</button>
+            <img id="modalImage" class="modal-image" src="" alt="Vergrößerte Ansicht">
+        </div>
+    </div>
+
+    <script>
+        let questionCounter = 1;
+        let auditData = {
+            questions: {},
+            images: {},
+            customTitles: {},
+            ratings: {},
+            customRatingTitles: {}
+        };
+
+        function toggleLocationDetails() {
+            const locationType = document.getElementById('locationType').value;
+            const ownSection = document.getElementById('ownBusinessSection');
+            const competitorSection = document.getElementById('competitorSection');
+
+            ownSection.style.display = locationType === 'own' ? 'block' : 'none';
+            competitorSection.style.display = locationType === 'competitor' ? 'block' : 'none';
+        }
+
+        function editTitle(questionId) {
+            // Schließe alle anderen Dropdowns
+            document.querySelectorAll('.theme-dropdown').forEach(dropdown => {
+                dropdown.remove();
+            });
+
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            const buttonElement = questionElement.querySelector('.question-number');
+            
+            // Erstelle Dropdown
+            const dropdown = document.createElement('div');
+            dropdown.className = 'theme-dropdown show';
+            
+            // Rating-Kategorien für Dropdown
+            const ratingCategories = [
+                { id: 'aussenbereich', title: 'Außenbereich', desc: 'Warenfülle Schütten, Unkraut, Markise' },
+                { id: 'aktionszone', title: 'Aktionszone', desc: 'Aktionsmeter, Saisonwand' },
+                { id: 'dekorative-kosmetik', title: 'Dekorative Kosmetik', desc: 'Ordnung, Abverkaufsware, Spiegel' },
+                { id: 'regalbild', title: 'Regalbild', desc: 'vorgezogen, OOS Situation, FL zugestellt' },
+                { id: 'mopro', title: 'Mopro', desc: 'Warenfülle, Top 50, Reduzierungen' },
+                { id: 'marketingmittel', title: 'Marketingmittel', desc: 'Vollständigkeit, kein Tesa' },
+                { id: 'sauberkeit', title: 'Sauberkeit', desc: 'genereller Eindruck, Spinnweben, Reinigungsleistung Boden' },
+                { id: 'ordnung-kasse', title: 'Ordnung Kasse', desc: 'keine Plakate, keine Flyer, freie Arbeitsplätze' },
+                { id: 'pausenraum', title: 'Pausenraum', desc: 'Pflegezustand, Kühlschrank' },
+                { id: 'lager', title: 'Lager', desc: 'Ordnung, Füllstand Rollis' },
+                { id: 'packtische', title: 'Packtische', desc: 'sauber und nicht überfrachtet' },
+                { id: 'displayzustand', title: 'Displayzustand', desc: 'Befüllung, rechtzeitiger Abbau' }
+            ];
+
+            let dropdownHTML = '';
+            
+            // Füge Kategorien hinzu
+            ratingCategories.forEach(category => {
+                dropdownHTML += `
+                    <div class="dropdown-item" onclick="selectThemeCategory(${questionId}, '${category.title}'); event.stopPropagation();">
+                        <div class="dropdown-item-title">${category.title}</div>
+                        <div class="dropdown-item-desc">${category.desc}</div>
+                    </div>
+                `;
+            });
+            
+            // Füge Custom-Eingabe hinzu
+            dropdownHTML += `
+                <div class="dropdown-custom">
+                    <input type="text" placeholder="Eigene Bezeichnung eingeben..." 
+                           onkeypress="handleCustomThemeKeypress(event, ${questionId})"
+                           id="customThemeInput-${questionId}" />
+                    <div class="dropdown-custom-buttons">
+                        <button class="dropdown-btn dropdown-btn-secondary" onclick="closeThemeDropdown()">Abbrechen</button>
+                        <button class="dropdown-btn dropdown-btn-primary" onclick="applyCustomTheme(${questionId})">Übernehmen</button>
+                    </div>
+                </div>
+            `;
+            
+            dropdown.innerHTML = dropdownHTML;
+            buttonElement.appendChild(dropdown);
+            
+            // Dropdown nach oben scrollen und Wert setzen (ohne Focus)
+            setTimeout(() => {
+                const customInput = document.getElementById(`customThemeInput-${questionId}`);
+                const currentTitle = auditData.customTitles[questionId] || `Thema ${questionId}`;
+                
+                // Dropdown an den Anfang scrollen
+                dropdown.scrollTop = 0;
+                
+                // Wert setzen wenn es ein Custom-Titel ist, aber NICHT fokussieren
+                if (!currentTitle.startsWith('Thema ')) {
+                    customInput.value = currentTitle;
+                }
+            }, 50);
+            
+            // Event-Listener für Klick außerhalb
+            setTimeout(() => {
+                document.addEventListener('click', closeThemeDropdownOnOutsideClick);
+            }, 100);
+        }
+
+        function selectThemeCategory(questionId, categoryTitle) {
+            // Titel setzen
+            auditData.customTitles[questionId] = categoryTitle;
+            
+            // UI aktualisieren
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            const titleElement = questionElement.querySelector('.question-number');
+            titleElement.textContent = categoryTitle;
+            
+            // Dropdown sofort schließen
+            setTimeout(() => {
+                closeThemeDropdown();
+            }, 10);
+        }
+
+        function handleCustomThemeKeypress(event, questionId) {
+            if (event.key === 'Enter') {
+                applyCustomTheme(questionId);
+            } else if (event.key === 'Escape') {
+                closeThemeDropdown();
+            }
+        }
+
+        function applyCustomTheme(questionId) {
+            const input = document.getElementById(`customThemeInput-${questionId}`);
+            const customTitle = input.value.trim();
+            
+            if (customTitle) {
+                auditData.customTitles[questionId] = customTitle;
+                
+                const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+                const titleElement = questionElement.querySelector('.question-number');
+                titleElement.textContent = customTitle;
+            }
+            
+            closeThemeDropdown();
+        }
+
+        function closeThemeDropdown() {
+            // Alle Dropdowns entfernen
+            const dropdowns = document.querySelectorAll('.theme-dropdown');
+            dropdowns.forEach(dropdown => {
+                dropdown.remove();
+            });
+            
+            // Event-Listener entfernen
+            document.removeEventListener('click', closeThemeDropdownOnOutsideClick);
+        }
+
+        function closeThemeDropdownOnOutsideClick(event) {
+            // Prüfe ob der Klick außerhalb des Dropdowns und des Buttons war
+            if (!event.target.closest('.theme-dropdown') && 
+                !event.target.closest('.question-number') &&
+                !event.target.classList.contains('question-number')) {
+                closeThemeDropdown();
+            }
+        }
+
+        // Automatisches Hinzufügen neuer Themen bei Eingabe
+        function handleTextInput(questionId) {
+            checkAndAddNewTheme(questionId);
+        }
+
+        function handleFileInput(questionId) {
+            checkAndAddNewTheme(questionId);
+        }
+
+        function checkAndAddNewTheme(questionId) {
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            const textarea = questionElement.querySelector('textarea');
+            const hasText = textarea.value.trim().length > 0;
+            const hasImages = auditData.images[questionId] && auditData.images[questionId].length > 0;
+            
+            // Prüfe ob bereits Content vorhanden ist
+            if (hasText || hasImages) {
+                // Prüfe ob es das letzte Thema ist
+                const allQuestions = document.querySelectorAll('.question-item');
+                const isLastQuestion = questionElement === allQuestions[allQuestions.length - 1];
+                
+                if (isLastQuestion) {
+                    // Füge automatisch neues Thema hinzu (ohne Scrolling)
+                    setTimeout(() => {
+                        addQuestion(true); // autoAdded = true
+                    }, 500); // Kleine Verzögerung für bessere UX
+                }
+            }
+        }
+
+        function editRatingTitle(ratingId) {
+            const defaultTitles = {
+                'aussenbereich': 'Außenbereich',
+                'aktionszone': 'Aktionszone',
+                'dekorative-kosmetik': 'Dekorative Kosmetik',
+                'regalbild': 'Regalbild',
+                'mopro': 'Mopro',
+                'marketingmittel': 'Marketingmittel',
+                'sauberkeit': 'Sauberkeit',
+                'ordnung-kasse': 'Ordnung Kasse',
+                'pausenraum': 'Pausenraum',
+                'lager': 'Lager',
+                'packtische': 'Packtische',
+                'displayzustand': 'Displayzustand'
+            };
+            
+            const currentTitle = auditData.customRatingTitles[ratingId] || defaultTitles[ratingId];
+            const newTitle = prompt('Bewertungs-Titel bearbeiten:', currentTitle);
+            
+            if (newTitle !== null && newTitle.trim() !== '') {
+                auditData.customRatingTitles[ratingId] = newTitle.trim();
+                
+                const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
+                const titleElement = ratingElement.querySelector('.rating-label');
+                titleElement.textContent = newTitle.trim();
+            }
+        }
+
+        function setRating(ratingId, value) {
+            auditData.ratings[ratingId] = value;
+            
+            const starContainer = document.querySelector(`[data-rating-id="${ratingId}"]`);
+            const stars = starContainer.querySelectorAll('.star');
+            
+            stars.forEach((star, index) => {
+                if (index < value) {
+                    star.classList.add('active');
+                    star.textContent = '⭐';
+                } else {
+                    star.classList.remove('active');
+                    star.textContent = '☆';
+                }
+            });
+            
+            const ratingText = document.getElementById(`rating-${ratingId}`);
+            const ratingLabels = {
+                1: '⭐ Sehr schlecht',
+                2: '⭐⭐ Schlecht', 
+                3: '⭐⭐⭐ Befriedigend',
+                4: '⭐⭐⭐⭐ Gut',
+                5: '⭐⭐⭐⭐⭐ Sehr gut'
+            };
+            ratingText.textContent = ratingLabels[value];
+            ratingText.style.color = value >= 4 ? '#28a745' : value >= 3 ? '#ffc107' : '#dc3545';
+        }
+
+        function deleteRating(ratingId) {
+            const ratingItem = document.querySelector(`[data-rating="${ratingId}"]`);
+            if (ratingItem) {
+                ratingItem.remove();
+                delete auditData.ratings[ratingId];
+                delete auditData.customRatingTitles[ratingId];
+            }
+        }
+
+        function addQuestion(autoAdded = false) {
+            questionCounter++;
+            const container = document.getElementById('questionsContainer');
+            
+            const questionHTML = `
+                <div class="question-item" data-question="${questionCounter}">
+                    <div class="question-header">
+                        <div class="question-header-left">
+                            <button type="button" class="question-number" onclick="editTitle(${questionCounter})" title="Klicken zum Bearbeiten des Themen-Titels">Thema ${questionCounter}</button>
+                            <button type="button" class="camera-icon" onclick="triggerFileInput(${questionCounter})" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
+                        </div>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(${questionCounter})">✕ Löschen</button>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Ihre Beobachtung:</label>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." 
+                                  oninput="handleTextInput(${questionCounter})" 
+                                  onchange="handleTextInput(${questionCounter})"></textarea>
+                    </div>
+                    <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(${questionCounter}, this)">
+                    <div class="thumbnails"></div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', questionHTML);
+            updateDeleteButtons();
+            
+            // Nur scrollen wenn manuell hinzugefügt (nicht automatisch)
+            if (!autoAdded) {
+                const newQuestion = container.lastElementChild;
+                newQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function deleteQuestion(questionId) {
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            if (questionElement) {
+                questionElement.remove();
+                delete auditData.questions[questionId];
+                delete auditData.images[questionId];
+                delete auditData.customTitles[questionId];
+                updateDeleteButtons();
+            }
+        }
+
+        function updateDeleteButtons() {
+            const questions = document.querySelectorAll('.question-item');
+            questions.forEach((question, index) => {
+                const deleteBtn = question.querySelector('.delete-question');
+                deleteBtn.style.display = questions.length > 1 ? 'block' : 'none';
+            });
+        }
+
+        function triggerFileInput(questionId) {
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            const fileInput = questionElement.querySelector('.file-input');
+            fileInput.click();
+        }
+
+        function handleFileUpload(questionId, input) {
+            const files = Array.from(input.files);
+            if (!auditData.images[questionId]) {
+                auditData.images[questionId] = [];
+            }
+
+            files.forEach(file => {
+                compressImage(file, (compressedFile) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        auditData.images[questionId].push({
+                            name: file.name,
+                            data: e.target.result,
+                            size: compressedFile.size
+                        });
+                        updateThumbnails(questionId);
+                        // Automatisches Hinzufügen neuer Themen bei Bildupload
+                        handleFileInput(questionId);
+                    };
+                    reader.readAsDataURL(compressedFile);
+                });
+            });
+            
+            input.value = '';
+        }
+
+        function compressImage(file, callback) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                let { width, height } = img;
+                const maxSize = 1600;
+                
+                if (width > maxSize || height > maxSize) {
+                    if (width > height) {
+                        height = (height * maxSize) / width;
+                        width = maxSize;
+                    } else {
+                        width = (width * maxSize) / height;
+                        height = maxSize;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(callback, 'image/jpeg', 0.9);
+            };
+            
+            img.src = URL.createObjectURL(file);
+        }
+
+        function updateThumbnails(questionId) {
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            const thumbnailsContainer = questionElement.querySelector('.thumbnails');
+            
+            thumbnailsContainer.innerHTML = '';
+            
+            if (auditData.images[questionId]) {
+                thumbnailsContainer.setAttribute('data-count', auditData.images[questionId].length);
+                auditData.images[questionId].forEach((image, index) => {
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = 'thumbnail';
+                    thumbnail.innerHTML = `
+                        <img src="${image.data}" alt="${image.name}" onclick="openImageModal('${image.data}', '${image.name}')">
+                        <button class="thumbnail-delete" onclick="deleteImage(${questionId}, ${index})">✕</button>
+                    `;
+                    thumbnailsContainer.appendChild(thumbnail);
+                });
+            }
+        }
+
+        function deleteImage(questionId, imageIndex) {
+            if (auditData.images[questionId]) {
+                auditData.images[questionId].splice(imageIndex, 1);
+                updateThumbnails(questionId);
+            }
+        }
+
+        function openImageModal(imageSrc, imageName) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            
+            modalImage.src = imageSrc;
+            modalImage.alt = imageName;
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+
+        function generateReport() {
+            const auditorName = document.getElementById('auditorName').value.trim() || 'Anonym';
+            const auditDate = document.getElementById('auditDate').value;
+            const auditTime = document.getElementById('auditTime').value;
+            const locationType = document.getElementById('locationType').value;
+            const location = locationType === 'own' 
+                ? document.getElementById('ownBusiness').value 
+                : document.getElementById('competitor').value;
+            
+            if (!auditDate) {
+                alert('Bitte wählen Sie ein Datum aus.');
+                return;
+            }
+            
+            if (!auditTime) {
+                alert('Bitte wählen Sie eine Uhrzeit aus.');
+                return;
+            }
+            
+            if (!locationType || !location) {
+                alert('Bitte wählen Sie einen Standort aus.');
+                return;
+            }
+
+            const questions = document.querySelectorAll('.question-item');
+            auditData.questions = {};
+            let hasContent = false;
+            
+            questions.forEach((question) => {
+                const questionId = question.getAttribute('data-question');
+                const textarea = question.querySelector('textarea');
+                const text = textarea.value.trim();
+                
+                const hasText = text.length > 0;
+                const hasImages = auditData.images[questionId] && auditData.images[questionId].length > 0;
+                
+                if (hasText || hasImages) {
+                    auditData.questions[questionId] = text;
+                    hasContent = true;
+                }
+            });
+
+            if (!hasContent) {
+                const hasRatings = Object.keys(auditData.ratings).length > 0;
+                
+                if (!hasRatings) {
+                    alert('Bitte füllen Sie mindestens ein Thema aus (Text, Foto oder Bewertung).');
+                    return;
+                }
+            }
+
+            createReport(auditorName, auditDate, auditTime, locationType, location);
+            
+            document.getElementById('auditForm').style.display = 'none';
+            document.getElementById('reportView').style.display = 'block';
+        }
+
+        function createReport(auditorName, auditDate, auditTime, locationType, location) {
+            const formattedDate = new Date(auditDate).toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            document.getElementById('reportDate').textContent = `${formattedDate} um ${auditTime}`;
+            document.getElementById('reportLocation').innerHTML = `
+                <strong>Besucher:</strong> ${auditorName}<br>
+                <strong>Standort:</strong> ${location} (${locationType === 'own' ? 'Budni Filiale' : 'Wettbewerb'})
+            `;
+
+            const reportContent = document.getElementById('reportContent');
+            reportContent.innerHTML = '';
+
+            Object.keys(auditData.questions).forEach((questionId, index) => {
+                const section = document.createElement('div');
+                section.className = 'report-section';
+                
+                const title = document.createElement('h3');
+                const customTitle = auditData.customTitles[questionId];
+                title.textContent = customTitle || `Thema ${index + 1}`;
+                section.appendChild(title);
+
+                const content = document.createElement('div');
+                content.className = 'report-content';
+                content.textContent = auditData.questions[questionId] || 'Nur Bildmaterial';
+                section.appendChild(content);
+
+                if (auditData.images[questionId] && auditData.images[questionId].length > 0) {
+                    const imagesContainer = document.createElement('div');
+                    imagesContainer.className = 'report-images';
+                    
+                    auditData.images[questionId].forEach(image => {
+                        const imageDiv = document.createElement('div');
+                        imageDiv.className = 'report-image';
+                        imageDiv.innerHTML = `<img src="${image.data}" alt="${image.name}" onclick="openImageModal('${image.data}', '${image.name}')" style="cursor: pointer;">`;
+                        imagesContainer.appendChild(imageDiv);
+                    });
+                    
+                    section.appendChild(imagesContainer);
+                }
+
+                reportContent.appendChild(section);
+            });
+
+            // Add ratings section
+            if (Object.keys(auditData.ratings).length > 0) {
+                const ratingsSection = document.createElement('div');
+                ratingsSection.className = 'report-section';
+                
+                const ratingsTitle = document.createElement('h3');
+                ratingsTitle.textContent = '⭐ Bewertungen';
+                ratingsSection.appendChild(ratingsTitle);
+
+                const ratingsContent = document.createElement('div');
+                ratingsContent.className = 'report-content';
+                
+                const defaultLabels = {
+                    'aussenbereich': 'Außenbereich',
+                    'aktionszone': 'Aktionszone',
+                    'dekorative-kosmetik': 'Dekorative Kosmetik',
+                    'regalbild': 'Regalbild',
+                    'mopro': 'Mopro',
+                    'marketingmittel': 'Marketingmittel',
+                    'sauberkeit': 'Sauberkeit',
+                    'ordnung-kasse': 'Ordnung Kasse',
+                    'pausenraum': 'Pausenraum',
+                    'lager': 'Lager',
+                    'packtische': 'Packtische',
+                    'displayzustand': 'Displayzustand'
+                };
+
+                const ratingDescriptions = {
+                    1: 'Sehr schlecht',
+                    2: 'Schlecht',
+                    3: 'Befriedigend',
+                    4: 'Gut',
+                    5: 'Sehr gut'
+                };
+
+                let ratingsHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">';
+                
+                Object.keys(auditData.ratings).forEach(ratingId => {
+                    const rating = auditData.ratings[ratingId];
+                    const label = auditData.customRatingTitles[ratingId] || defaultLabels[ratingId] || ratingId;
+                    const description = ratingDescriptions[rating];
+                    const stars = '⭐'.repeat(rating);
+                    const color = rating >= 4 ? '#28a745' : rating >= 3 ? '#ffc107' : '#dc3545';
+                    
+                    ratingsHTML += `
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">${label}</div>
+                            <div style="font-size: 18px; margin-bottom: 5px;">${stars}</div>
+                            <div style="font-size: 12px; color: ${color};">${description}</div>
+                        </div>
+                    `;
+                });
+                
+                ratingsHTML += '</div>';
+                ratingsContent.innerHTML = ratingsHTML;
+                ratingsSection.appendChild(ratingsContent);
+                reportContent.appendChild(ratingsSection);
+            }
+        }
+
+        function backToForm() {
+            document.getElementById('reportView').style.display = 'none';
+            document.getElementById('auditForm').style.display = 'block';
+        }
+
+        function resetForm() {
+            const confirmed = confirm('🔄 Neues Feedback starten?\n\nAlle eingegebenen Daten gehen verloren. Möchten Sie wirklich ein neues Feedback beginnen?');
+            
+            if (!confirmed) return;
+
+            auditData = {
+                questions: {},
+                images: {},
+                customTitles: {},
+                ratings: {},
+                customRatingTitles: {}
+            };
+            questionCounter = 1;
+
+            document.getElementById('auditorName').value = '';
+            document.getElementById('locationType').value = '';
+            document.getElementById('ownBusiness').value = '';
+            document.getElementById('competitor').value = '';
+            
+            document.getElementById('ownBusinessSection').style.display = 'none';
+            document.getElementById('competitorSection').style.display = 'none';
+
+            const questionsContainer = document.getElementById('questionsContainer');
+            const allQuestions = questionsContainer.querySelectorAll('.question-item');
+            
+            for (let i = 1; i < allQuestions.length; i++) {
+                allQuestions[i].remove();
+            }
+
+            const firstQuestion = questionsContainer.querySelector('.question-item[data-question="1"]');
+            if (firstQuestion) {
+                firstQuestion.querySelector('textarea').value = '';
+                firstQuestion.querySelector('.question-number').textContent = 'Thema 1';
+                firstQuestion.querySelector('.thumbnails').innerHTML = '';
+                firstQuestion.querySelector('.file-input').value = '';
+            }
+
+            updateDeleteButtons();
+
+            const allRatingItems = document.querySelectorAll('.rating-item');
+            allRatingItems.forEach(item => {
+                const stars = item.querySelectorAll('.star');
+                stars.forEach(star => {
+                    star.classList.remove('active');
+                    star.textContent = '☆';
+                });
+                
+                const ratingValue = item.querySelector('.rating-value');
+                if (ratingValue) {
+                    ratingValue.textContent = 'Noch nicht bewertet';
+                    ratingValue.style.color = '#666';
+                }
+            });
+
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            document.getElementById('auditDate').value = today;
+            document.getElementById('auditTime').value = currentTime;
+
+            document.getElementById('reportView').style.display = 'none';
+            document.getElementById('auditForm').style.display = 'block';
+
+            alert('✅ Neues Feedback gestartet!\n\nAlle Felder wurden zurückgesetzt und sind bereit für die nächste Erfassung.');
+        }
+
+        async function shareReport() {
+            alert('📱 Share-Funktion wird simuliert.\n\nIn einer echten Umgebung würde hier:\n• HTML-Report komprimiert\n• Native Share-API verwendet\n• Datei geteilt oder heruntergeladen');
+        }
+
+        async function downloadAsZIP() {
+            alert('💾 ZIP-Download wird simuliert.\n\nIn einer echten Umgebung würde hier:\n• ZIP mit HTML-Report erstellt\n• Original-Bilder hinzugefügt\n• Anleitung beigefügt\n• Download gestartet');
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            document.getElementById('auditDate').value = today;
+            document.getElementById('auditTime').value = currentTime;
+        });
+    </script>
+</body>
+</html>
